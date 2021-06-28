@@ -1,10 +1,10 @@
 "use strict";
-const fs = require(`fs`);
+const fs = require(`fs`).promises;
+const chalk = require(`chalk`);
 
 const {
   CATEGORIES,
   DESCRIPTIONS,
-  EXIT_CODE,
   FILE_NAME,
   OFFER_TYPES,
   PICTURE_RESTRICTS,
@@ -15,14 +15,13 @@ const {getRandomInt, shuffle} = require(`../utils`);
 
 const {MIN, MAX} = PICTURE_RESTRICTS;
 
-const writeIntoFile = (content, onCompleted) => {
-  fs.writeFile(FILE_NAME, JSON.stringify(content), (err) => {
-    if (err) {
-      process.exit(EXIT_CODE.failure);
-    }
-
-    onCompleted();
-  });
+const writeIntoFile = async (content) => {
+  try {
+    await fs.writeFile(FILE_NAME, JSON.stringify(content));
+  } catch (error) {
+    console.error(chalk.red(`Can't write data to file...`));
+    throw error;
+  }
 };
 
 const getType = () =>
