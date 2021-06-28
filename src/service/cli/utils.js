@@ -3,17 +3,29 @@ const fs = require(`fs`).promises;
 const chalk = require(`chalk`);
 
 const {
-  CATEGORIES,
-  DESCRIPTIONS,
   FILE_NAME,
   OFFER_TYPES,
   PICTURE_RESTRICTS,
   PRICE_RESTRICTS,
-  TITLES,
 } = require(`../constants`);
 const {getRandomInt, shuffle} = require(`../utils`);
 
 const {MIN, MAX} = PICTURE_RESTRICTS;
+
+const readContent = async (path) => {
+  try {
+    const content = await fs.readFile(path, `utf8`);
+
+    if (!content) {
+      throw new Error(`empty file for such path: ${path}`);
+    }
+
+    return content.trim().split(`\n`);
+  } catch (err) {
+    console.error(chalk.red(err));
+    throw err;
+  }
+};
 
 const writeIntoFile = async (content) => {
   try {
@@ -24,30 +36,36 @@ const writeIntoFile = async (content) => {
   }
 };
 
+const getCategory = (categories) => [
+  categories[getRandomInt(0, categories.length - 1)],
+];
+const getDescription = (sentences) => shuffle(sentences).slice(1, 5).join(` `);
+const getPicture = () => `item${getRandomInt(MIN, MAX)}.jpg`;
+const getSum = () => getRandomInt(PRICE_RESTRICTS.MIN, PRICE_RESTRICTS.MAX);
+const getTitle = (titles) => titles[getRandomInt(0, titles.length - 1)];
 const getType = () =>
   OFFER_TYPES[
     Object.keys(OFFER_TYPES)[
       Math.floor(Math.random() * Object.keys(OFFER_TYPES).length)
     ]
   ];
-const getTitle = () => TITLES[getRandomInt(0, TITLES.length - 1)];
-const getDescription = () => shuffle(DESCRIPTIONS).slice(1, 5).join(` `);
-const getSum = () => getRandomInt(PRICE_RESTRICTS.MIN, PRICE_RESTRICTS.MAX);
-const getPicture = () => `item${getRandomInt(MIN, MAX)}.jpg`;
-const getCategory = () => [CATEGORIES[getRandomInt(0, CATEGORIES.length - 1)]];
 
-const generateOffer = () => ({
-  type: getType(),
-  title: getTitle(),
-  description: getDescription(),
-  sum: getSum(),
+const generateOffer = (titles, categories, sentences) => ({
+  category: getCategory(categories),
+  description: getDescription(sentences),
   picture: getPicture(),
-  category: getCategory(),
+  sum: getSum(),
+  title: getTitle(titles),
+  type: getType(),
 });
 
-const generateOffers = (count) => Array(count).fill({}).map(generateOffer);
+const generateOffers = (count, titles, categories, sentences) =>
+  Array(count)
+    .fill({})
+    .map(() => generateOffer(titles, categories, sentences));
 
 module.exports = {
-  writeIntoFile,
   generateOffers,
+  readContent,
+  writeIntoFile,
 };
